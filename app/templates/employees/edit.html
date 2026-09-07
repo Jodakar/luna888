@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% block title %}Права сотрудника{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h2>🔐 Права: {{ user.full_name or user.email }}</h2>
+    
+    <form method="POST" class="mt-4">
+        <div class="card mb-4">
+            <div class="card-header">Личные данные</div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Имя (ФИО)</label>
+                        <input type="text" class="form-control" name="full_name" value="{{ user.full_name or '' }}">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Телефон</label>
+                        <input type="text" class="form-control" name="phone" value="{{ user.phone or '' }}" placeholder="+7XXXXXXXXXX">
+                        <div class="field-hint">Формат: +7XXXXXXXXXX</div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Telegram</label>
+                        <input type="text" class="form-control" name="telegram" value="{{ user.telegram or '' }}">
+                        <div class="field-hint">🔍 ID можно узнать у @userinfobot</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Должность</label>
+                        <input type="text" class="form-control" name="position" value="{{ user.position or '' }}">
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">Права доступа</div>
+            <div class="card-body">
+                <table class="table table-bordered">
+                    <thead class="table-dark">
+                        <tr>
+                            <th style="width: 40%;">Модуль</th>
+                            <th style="width: 30%; text-align: center;">Просмотр</th>
+                            <th style="width: 30%; text-align: center;">Редактирование</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for module in modules %}
+                        <tr>
+                            <td style="font-weight: 500;">
+                                {% if module == 'products' %}📦 Товары
+                                {% elif module == 'orders_supplier' %}🛒 Заказы поставщику
+                                {% elif module == 'orders_mp' %}📦 Заказы МП
+                                {% elif module == 'couriers' %}🚗 Курьеры
+                                {% elif module == 'deliveries' %}📋 Доставка
+                                {% elif module == 'returns' %}↩️ Возвраты
+                                {% elif module == 'inventory' %}📊 Инвентаризация
+                                {% elif module == 'reports' %}📈 Отчёты
+                                {% elif module == 'timesheet' %}⏰ Табель
+                                {% elif module == 'employees' %}👥 Сотрудники
+                                {% elif module == 'settings' %}⚙️ Настройки
+                                {% endif %}
+                            </td>
+                            <td class="checkbox-cell">
+                                <input type="checkbox" name="view_{{ module }}" {% if permissions.get(module) and permissions[module].can_view %}checked{% endif %} class="form-check-input">
+                            </td>
+                            <td class="checkbox-cell">
+                                <input type="checkbox" name="edit_{{ module }}" {% if permissions.get(module) and permissions[module].can_edit %}checked{% endif %} class="form-check-input">
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="mt-3">
+            <button type="submit" class="btn btn-primary btn-lg">💾 Сохранить</button>
+            <a href="{{ url_for('employees.index') }}" class="btn btn-secondary btn-lg">Отмена</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

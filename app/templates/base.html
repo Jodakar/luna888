@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Luna888{% endblock %}</title>
+    <link rel="icon" href="{{ url_for('static', filename='img/favicon.svg') }}" type="image/svg+xml">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { padding-top: 70px; background: #f5f5f5; }
+        .navbar { box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .nav-link { font-size: 14px; }
+        
+        /* Улучшенные чекбоксы */
+        .form-check-input {
+            width: 22px;
+            height: 22px;
+            border: 2px solid #0f3460;
+            cursor: pointer;
+            margin: 0;
+        }
+        .form-check-input:checked {
+            background-color: #0f3460;
+            border-color: #0f3460;
+        }
+        
+        /* Подложка для ячеек с чекбоксами */
+        .checkbox-cell {
+            background: #e8eef5;
+            border-radius: 5px;
+            padding: 5px;
+            text-align: center;
+        }
+        
+        /* Подсказки */
+        .field-hint {
+            font-size: 12px;
+            color: #666;
+            margin-top: 3px;
+        }
+        
+        /* Карточки для модулей */
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+        .card-header {
+            background: #0f3460;
+            color: white;
+            border-radius: 10px 10px 0 0 !important;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">
+                <img src="{{ url_for('static', filename='img/favicon.svg') }}" alt="🌙" style="width: 24px; height: 24px; margin-right: 8px;">
+                LUNA888
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item"><a class="nav-link" href="/products">Товары</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/orders-supplier">Заказы поставщику</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/orders-mp">Заказы МП</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/couriers">Курьеры</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/deliveries">Доставка</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/returns">Возвраты</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/inventory">Инвентаризация</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/reports">Отчёты</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/timesheet">Табель</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/employees">Сотрудники</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/settings">Настройки</a></li>
+                </ul>
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                            👤 {{ current_user.email }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="/profile">Личное</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/logout">Выйти</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container-fluid">
+        {% block content %}{% endblock %}
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

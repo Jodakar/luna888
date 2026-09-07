@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+{% block title %}Настройки{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h2>⚙️ Настройки</h2>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    
+    <!-- Статус токенов -->
+    <div class="card mb-4">
+        <div class="card-header">🔌 Статус API</div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <h5>МойСклад</h5>
+                            {% if statuses.moysklad.status == 'ok' %}
+                                <span class="badge bg-success" style="font-size: 16px;">✅ {{ statuses.moysklad.message }}</span>
+                            {% elif statuses.moysklad.status == 'not_set' %}
+                                <span class="badge bg-secondary" style="font-size: 16px;">⚪ {{ statuses.moysklad.message }}</span>
+                            {% else %}
+                                <span class="badge bg-danger" style="font-size: 16px;">❌ {{ statuses.moysklad.message }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <h5>Wildberries</h5>
+                            {% if statuses.wb.status == 'ok' %}
+                                <span class="badge bg-success" style="font-size: 16px;">✅ {{ statuses.wb.message }}</span>
+                            {% elif statuses.wb.status == 'not_set' %}
+                                <span class="badge bg-secondary" style="font-size: 16px;">⚪ {{ statuses.wb.message }}</span>
+                            {% else %}
+                                <span class="badge bg-danger" style="font-size: 16px;">❌ {{ statuses.wb.message }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <h5>Ozon</h5>
+                            {% if statuses.ozon.status == 'ok' %}
+                                <span class="badge bg-success" style="font-size: 16px;">✅ {{ statuses.ozon.message }}</span>
+                            {% elif statuses.ozon.status == 'not_set' %}
+                                <span class="badge bg-secondary" style="font-size: 16px;">⚪ {{ statuses.ozon.message }}</span>
+                            {% else %}
+                                <span class="badge bg-danger" style="font-size: 16px;">❌ {{ statuses.ozon.message }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="text-center mt-3">
+            </div>
+        </div>
+    </div>
+    
+    <!-- Форма настроек -->
+    <form method="POST" action="{{ url_for('settings.save') }}">
+        <div class="card mb-4">
+            <div class="card-header">🔑 API-ключи</div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">МойСклад Token</label>
+                    <input type="password" class="form-control" name="moysklad_token" value="{{ settings.moysklad_token }}" placeholder="Токен API">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Wildberries Token</label>
+                    <input type="password" class="form-control" name="wb_token" value="{{ settings.wb_token }}" placeholder="Токен API">
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Ozon Client ID</label>
+                        <input type="password" class="form-control" name="ozon_client_id" value="{{ settings.ozon_client_id }}" placeholder="Client ID">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Ozon API Key</label>
+                        <input type="password" class="form-control" name="ozon_api_key" value="{{ settings.ozon_api_key }}" placeholder="API Key">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Telegram Bot Token</label>
+                    <input type="password" class="form-control" name="telegram_bot_token" value="{{ settings.telegram_bot_token }}" placeholder="Токен бота">
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header">📧 SMTP (почта)</div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">SMTP Host</label>
+                        <input type="text" class="form-control" name="smtp_host" value="{{ settings.smtp_host }}">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">SMTP Port</label>
+                        <input type="text" class="form-control" name="smtp_port" value="{{ settings.smtp_port }}">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">SMTP User</label>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Имя отправителя</label>
+                        <input type="text" class="form-control" name="smtp_from_name" value="{{ settings.smtp_from_name }}" placeholder="Luna888">
+                    </div>
+                        <input type="text" class="form-control" name="smtp_user" value="{{ settings.smtp_user }}">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">SMTP Password</label>
+                        <input type="password" class="form-control" name="smtp_password" value="{{ settings.smtp_password }}">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Получатель уведомлений</label>
+                    <input type="text" class="form-control" name="smtp_to" value="{{ settings.smtp_to }}">
+                </div>
+            </div>
+        </div>
+        
+        <button type="submit" class="btn btn-primary btn-lg">💾 Сохранить</button>
+    </form>
+</div>
+{% endblock %}

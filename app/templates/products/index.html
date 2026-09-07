@@ -1,0 +1,460 @@
+{% extends 'base.html' %}
+{% block title %}Товары{% endblock %}
+{% block content %}
+<div class="container-fluid mt-2">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>📦 Товары</h2>
+        <div>
+            <button id="btnRefresh" class="btn btn-primary btn-sm" onclick="syncProducts()">🔄 Обновить</button>
+            <button class="btn btn-outline-secondary btn-sm" onclick="exportToExcel()">📊 Excel</button>
+            <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#columnsModal">⚙️ Колонки</button>
+            <button class="btn btn-outline-danger btn-sm" onclick="resetFilters()">✖️ Сбросить фильтры</button>
+        </div>
+    </div>
+    
+    <!-- Поиск -->
+    <div class="mb-3">
+        <input type="text" id="globalSearch" class="form-control" placeholder="🔍 Поиск по артикулу, размеру, коду, штрихкоду, марке (КИЗ)...">
+    </div>
+    
+    <!-- Таблица -->
+    <div class="table-responsive">
+        <table class="table table-sm table-striped table-hover" id="productsTable">
+            <!-- Строка фильтров -->
+            <thead>
+                <tr class="table-light">
+                    <th><input type="text" class="form-control form-control-sm filter-input" data-col="article" placeholder="Фильтр"></th>
+                    <th><input type="text" class="form-control form-control-sm filter-input" data-col="size" placeholder="Фильтр"></th>
+                    <th><input type="text" class="form-control form-control-sm filter-input" data-col="code" placeholder="Фильтр"></th>
+                    <th><input type="text" class="form-control form-control-sm filter-input" data-col="barcode" placeholder="Фильтр"></th>
+                    <th>
+                        <select class="form-select form-select-sm filter-select" data-col="kiz">
+                            <option value="">Все</option>
+                            <option value="yes">Есть КИЗ</option>
+                            <option value="no">Нет КИЗ</option>
+                        </select>
+                    </th>
+                    <th>
+                        <select class="form-select form-select-sm filter-select" data-col="stock_main">
+                            <option value="">Все</option>
+                            <option value="gt0">> 0</option>
+                            <option value="eq0">= 0</option>
+                        </select>
+                    </th>
+                    <th>
+                        <select class="form-select form-select-sm filter-select" data-col="stock_wb">
+                            <option value="">Все</option>
+                            <option value="gt0">> 0</option>
+                            <option value="eq0">= 0</option>
+                        </select>
+                    </th>
+                    <th>
+                        <select class="form-select form-select-sm filter-select" data-col="stock_ozon">
+                            <option value="">Все</option>
+                            <option value="gt0">> 0</option>
+                            <option value="eq0">= 0</option>
+                        </select>
+                    </th>
+                    <th>
+                        <select class="form-select form-select-sm filter-select" data-col="stock_dbs">
+                            <option value="">Все</option>
+                            <option value="gt0">> 0</option>
+                            <option value="eq0">= 0</option>
+                        </select>
+                    </th>
+                    <th>
+                        <select class="form-select form-select-sm filter-select" data-col="stock_wb_fbo">
+                            <option value="">Все</option>
+                            <option value="gt0">> 0</option>
+                            <option value="eq0">= 0</option>
+                        </select>
+                    </th>
+                    <th>
+                        <select class="form-select form-select-sm filter-select" data-col="stock_ozon_fbo">
+                            <option value="">Все</option>
+                            <option value="gt0">> 0</option>
+                            <option value="eq0">= 0</option>
+                        </select>
+                    </th>
+                    <th>
+                        <select class="form-select form-select-sm filter-select" data-col="stock_total">
+                            <option value="">Все</option>
+                            <option value="gt0">> 0</option>
+                            <option value="eq0">= 0</option>
+                        </select>
+                    </th>
+                    <th><input type="text" class="form-control form-control-sm filter-input" data-col="buy_price" placeholder="Фильтр"></th>
+                    <th><input type="text" class="form-control form-control-sm filter-input" data-col="sale_price" placeholder="Фильтр"></th>
+                    <th><input type="text" class="form-control form-control-sm filter-input" data-col="brand" placeholder="Фильтр"></th>
+                </tr>
+            </thead>
+            <!-- Строка сортировки -->
+            <thead>
+                <tr class="table-secondary">
+                    <th onclick="sortBy('article')" style="cursor:pointer;">⇅</th>
+                    <th onclick="sortBy('size')" style="cursor:pointer;">⇅</th>
+                    <th onclick="sortBy('code')" style="cursor:pointer;">⇅</th>
+                    <th onclick="sortBy('barcode')" style="cursor:pointer;">⇅</th>
+                    <th onclick="sortBy('kiz')" style="cursor:pointer;">⇅</th>
+                    <th onclick="sortBy('stock_main')" style="cursor:pointer;">⇅</th>
+                    <th onclick="sortBy('stock_wb')" style="cursor:pointer;">⇅</th>
+                    <th onclick="sortBy('stock_ozon')" style="cursor:pointer;">⇅</th>
+                    <th onclick="sortBy('stock_dbs')" style="cursor:pointer;">⇅</th>
+                    <th onclick="sortBy('stock_wb_fbo')" style="cursor:pointer;">⇅</th>
+                    <th onclick="sortBy('stock_ozon_fbo')" style="cursor:pointer;">⇅</th>
+                    <th onclick="sortBy('stock_total')" style="cursor:pointer;">⇅</th>
+                    <th onclick="sortBy('buy_price')" style="cursor:pointer;">⇅</th>
+                    <th onclick="sortBy('sale_price')" style="cursor:pointer;">⇅</th>
+                    <th onclick="sortBy('brand')" style="cursor:pointer;">⇅</th>
+                </tr>
+            </thead>
+            <!-- Заголовки -->
+            <thead class="table-dark">
+                <tr>
+                    <th data-col="article">Артикул</th>
+                    <th data-col="size">Размер</th>
+                    <th data-col="code">Код</th>
+                    <th data-col="barcode">Штрихкод</th>
+                    <th data-col="kiz">КИЗ</th>
+                    <th data-col="stock_main">Осн.склад</th>
+                    <th data-col="stock_wb">WB FBS</th>
+                    <th data-col="stock_ozon">Ozon FBS</th>
+                    <th data-col="stock_dbs">DBS</th>
+                    <th data-col="stock_wb_fbo">WB FBO</th>
+                    <th data-col="stock_ozon_fbo">Ozon FBO</th>
+                    <th data-col="stock_total">Всего</th>
+                    <th data-col="buy_price">Закупка</th>
+                    <th data-col="sale_price">Продажа</th>
+                    <th data-col="brand">Бренд</th>
+                </tr>
+            </thead>
+            <tbody id="productsBody">
+                <tr><td colspan="15" class="text-center text-muted py-5">Загрузка...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Модальное окно колонок -->
+<div class="modal fade" id="columnsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Настройка колонок</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-check"><input class="form-check-input column-toggle" type="checkbox" data-col="article" checked><label class="form-check-label">Артикул</label></div>
+                <div class="form-check"><input class="form-check-input column-toggle" type="checkbox" data-col="size" checked><label class="form-check-label">Размер</label></div>
+                <div class="form-check"><input class="form-check-input column-toggle" type="checkbox" data-col="code" checked><label class="form-check-label">Код</label></div>
+                <div class="form-check"><input class="form-check-input column-toggle" type="checkbox" data-col="barcode" checked><label class="form-check-label">Штрихкод</label></div>
+                <div class="form-check"><input class="form-check-input column-toggle" type="checkbox" data-col="kiz" checked><label class="form-check-label">КИЗ</label></div>
+                <div class="form-check"><input class="form-check-input column-toggle" type="checkbox" data-col="stock_main" checked><label class="form-check-label">Осн.склад</label></div>
+                <div class="form-check"><input class="form-check-input column-toggle" type="checkbox" data-col="stock_wb" checked><label class="form-check-label">WB FBS</label></div>
+                <div class="form-check"><input class="form-check-input column-toggle" type="checkbox" data-col="stock_ozon" checked><label class="form-check-label">Ozon FBS</label></div>
+                <div class="form-check"><input class="form-check-input column-toggle" type="checkbox" data-col="stock_dbs" checked><label class="form-check-label">DBS</label></div>
+                <div class="form-check"><input class="form-check-input column-toggle" type="checkbox" data-col="stock_wb_fbo" checked><label class="form-check-label">WB FBO</label></div>
+                <div class="form-check"><input class="form-check-input column-toggle" type="checkbox" data-col="stock_ozon_fbo" checked><label class="form-check-label">Ozon FBO</label></div>
+                <div class="form-check"><input class="form-check-input column-toggle" type="checkbox" data-col="stock_total" checked><label class="form-check-label">Всего</label></div>
+                <div class="form-check"><input class="form-check-input column-toggle" type="checkbox" data-col="buy_price" checked><label class="form-check-label">Закупка</label></div>
+                <div class="form-check"><input class="form-check-input column-toggle" type="checkbox" data-col="sale_price" checked><label class="form-check-label">Продажа</label></div>
+                <div class="form-check"><input class="form-check-input column-toggle" type="checkbox" data-col="brand" checked><label class="form-check-label">Бренд</label></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="applyColumns()">Применить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let productsData = [];
+let filteredData = [];
+let sortColumn = null;
+let sortDirection = 1;
+
+function loadProducts() {
+    fetch('/products/api/data')
+        .then(res => res.json())
+        .then(data => {
+            productsData = data.products || [];
+            filteredData = [...productsData];
+            renderTable();
+        })
+        .catch(() => {
+            document.getElementById('productsBody').innerHTML = '<tr><td colspan="15" class="text-center text-danger py-3">Ошибка загрузки</td></tr>';
+        });
+}
+
+function renderTable() {
+    const tbody = document.getElementById('productsBody');
+    
+    if (filteredData.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="15" class="text-center text-muted py-3">Ничего не найдено</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = filteredData.map(p => {
+        const stocks = p.stocks || {};
+        const kizStr = (p.kiz_count || 0) > 0 ? '✅' : '❌';
+        
+        return '<tr>'
+            + '<td class="col-article">' + (p.article || '—') + '</td>'
+            + '<td class="col-size">' + (p.size || '—') + '</td>'
+            + '<td class="col-code">' + (p.code || '—') + '</td>'
+            + '<td class="col-barcode">' + (p.barcode || '—') + '</td>'
+            + '<td class="col-kiz text-center">' + kizStr + ' (' + (p.kiz_count || 0) + ')</td>'
+            + '<td class="col-stock_main text-center">' + (stocks['Основной'] || 0) + '</td>'
+            + '<td class="col-stock_wb text-center">' + (stocks['WB FBS'] || 0) + '</td>'
+            + '<td class="col-stock_ozon text-center">' + (stocks['Ozon FBS'] || 0) + '</td>'
+            + '<td class="col-stock_dbs text-center">' + (stocks['DBS WB'] || 0) + '</td>'
+            + '<td class="col-stock_wb_fbo text-center">' + (stocks['WB FBO'] || 0) + '</td>'
+            + '<td class="col-stock_ozon_fbo text-center">' + (stocks['Ozon FBO'] || 0) + '</td>'
+            + '<td class="col-stock_total text-center fw-bold">' + (p.total_stock || 0) + '</td>'
+            + '<td class="col-buy_price">' + (p.buy_price ? (p.buy_price / 100).toFixed(2) : '—') + '</td>'
+            + '<td class="col-sale_price">' + (p.sale_price ? (p.sale_price / 100).toFixed(2) : '—') + '</td>'
+            + '<td class="col-brand">' + (p.brand || '—') + '</td>'
+            + '</tr>';
+    }).join('');
+    
+    applyColumns();
+}
+
+// Фильтры
+function getFilteredProducts() {
+    const searchText = document.getElementById('globalSearch').value.toLowerCase().trim();
+    
+    // Собираем фильтры
+    const filters = {};
+    document.querySelectorAll('.filter-input').forEach(input => {
+        filters[input.dataset.col] = input.value.toLowerCase().trim();
+    });
+    document.querySelectorAll('.filter-select').forEach(select => {
+        filters[select.dataset.col] = select.value;
+    });
+    
+    let filtered = productsData.filter(p => {
+        // Поиск
+        if (searchText) {
+            const searchFields = [
+                p.article || '', p.size || '', p.code || '', p.barcode || '', p.brand || '',
+                (p.article + ' (' + p.size + ', ' + p.size + ')').toLowerCase(),
+                (p.article + ' (' + p.size + ')').toLowerCase()
+            ];
+            
+            // Добавляем КИЗы в поиск
+            const kizList = p.kiz_list || [];
+            if (kizList.some(kiz => kiz.toLowerCase().includes(searchText))) {
+                // Найдено по КИЗу
+            } else if (!searchFields.some(f => f.toLowerCase().includes(searchText))) {
+                return false;
+            }
+        }
+        
+        // Фильтры
+        for (const [col, value] of Object.entries(filters)) {
+            if (!value) continue;
+            
+            const stocks = p.stocks || {};
+            
+            if (col === 'kiz') {
+                const hasKiz = (p.kiz_count || 0) > 0;
+                if (value === 'yes' && !hasKiz) return false;
+                if (value === 'no' && hasKiz) return false;
+            } else if (col.startsWith('stock_')) {
+                const storeMap = {
+                    'stock_main': 'Основной', 'stock_wb': 'WB FBS',
+                    'stock_ozon': 'Ozon FBS', 'stock_dbs': 'DBS WB',
+                    'stock_wb_fbo': 'WB FBO', 'stock_ozon_fbo': 'Ozon FBO', 'stock_total': 'total'
+                };
+                const store = storeMap[col];
+                const stockValue = store === 'total' ? (p.total_stock || 0) : (stocks[store] || 0);
+                if (value === 'gt0' && stockValue <= 0) return false;
+                if (value === 'eq0' && stockValue !== 0) return false;
+            } else {
+                const fieldValue = String(p[col] || '').toLowerCase();
+                if (!fieldValue.includes(value)) return false;
+            }
+        }
+        return true;
+    });
+    
+    return filtered;
+}
+
+function applyFilters() {
+    filteredData = getFilteredProducts();
+    renderTable();
+}
+
+function resetFilters() {
+    document.querySelectorAll('.filter-input').forEach(input => input.value = '');
+    document.querySelectorAll('.filter-select').forEach(select => select.value = '');
+    document.getElementById('globalSearch').value = '';
+    filteredData = [...productsData];
+    sortColumn = null;
+    renderTable();
+}
+
+// Сортировка
+function sortBy(column) {
+    if (sortColumn === column) {
+        sortDirection *= -1;
+    } else {
+        sortColumn = column;
+        sortDirection = 1;
+    }
+    
+    filteredData.sort((a, b) => {
+        const stocks_a = a.stocks || {};
+        const stocks_b = b.stocks || {};
+        
+        let val_a, val_b;
+        switch(column) {
+            case 'kiz': val_a = a.kiz_count || 0; val_b = b.kiz_count || 0; break;
+            case 'stock_main': val_a = stocks_a['Основной'] || 0; val_b = stocks_b['Основной'] || 0; break;
+            case 'stock_wb': val_a = stocks_a['WB FBS'] || 0; val_b = stocks_b['WB FBS'] || 0; break;
+            case 'stock_ozon': val_a = stocks_a['Ozon FBS'] || 0; val_b = stocks_b['Ozon FBS'] || 0; break;
+            case 'stock_dbs': val_a = stocks_a['DBS WB'] || 0; val_b = stocks_b['DBS WB'] || 0; break;
+            case 'stock_wb_fbo': val_a = stocks_a['WB FBO'] || 0; val_b = stocks_b['WB FBO'] || 0; break;
+            case 'stock_ozon_fbo': val_a = stocks_a['Ozon FBO'] || 0; val_b = stocks_b['Ozon FBO'] || 0; break;
+            case 'stock_total': val_a = a.total_stock || 0; val_b = b.total_stock || 0; break;
+            case 'buy_price': val_a = a.buy_price || 0; val_b = b.buy_price || 0; break;
+            case 'sale_price': val_a = a.sale_price || 0; val_b = b.sale_price || 0; break;
+            default: val_a = (a[column] || '').toString().toLowerCase(); val_b = (b[column] || '').toString().toLowerCase();
+        }
+        
+        if (typeof val_a === 'string') return val_a.localeCompare(val_b) * sortDirection;
+        return (val_a - val_b) * sortDirection;
+    });
+    
+    renderTable();
+}
+
+// Колонки
+function applyColumns() {
+    document.querySelectorAll('.column-toggle').forEach(cb => {
+        const col = cb.dataset.col;
+        const checked = cb.checked;
+        
+        // Скрываем заголовок
+        document.querySelectorAll(`th[data-col="${col}"]`).forEach(th => {
+            th.style.display = checked ? '' : 'none';
+        });
+        
+        // Скрываем фильтр
+        document.querySelectorAll(`.filter-input[data-col="${col}"], .filter-select[data-col="${col}"]`).forEach(el => {
+            el.closest('th').style.display = checked ? '' : 'none';
+        });
+        
+        // Скрываем сортировку
+        document.querySelectorAll(`th[onclick="sortBy('${col}')"]`).forEach(th => {
+            th.style.display = checked ? '' : 'none';
+        });
+        
+        // Скрываем данные
+        document.querySelectorAll(`.col-${col}`).forEach(td => {
+            td.style.display = checked ? '' : 'none';
+        });
+    });
+}
+
+function syncProducts() {
+    const btn = document.getElementById('btnRefresh');
+    btn.disabled = true;
+    btn.innerHTML = '⏳...';
+    
+    fetch('/products/api/sync')
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) loadProducts();
+            else alert('Ошибка синхронизации');
+        })
+        .finally(() => {
+            btn.disabled = false;
+            btn.innerHTML = '🔄 Обновить';
+        });
+}
+
+function exportToExcel() {
+    const visibleCols = [];
+    document.querySelectorAll('.column-toggle').forEach(cb => {
+        if (cb.checked) visibleCols.push(cb.dataset.col);
+    });
+    
+    const headers = {
+        'article': 'Артикул', 'size': 'Размер', 'code': 'Код', 'barcode': 'Штрихкод',
+        'kiz': 'КИЗ', 'stock_main': 'Осн.склад', 'stock_wb': 'WB FBS',
+        'stock_ozon': 'Ozon FBS', 'stock_dbs': 'DBS', 'stock_wb_fbo': 'WB FBO', 'stock_ozon_fbo': 'Ozon FBO', 'stock_total': 'Всего', 'buy_price': 'Закупка',
+        'sale_price': 'Продажа', 'brand': 'Бренд'
+    };
+    
+    let csv = '\uFEFF' + visibleCols.map(c => headers[c]).join(';') + '\n';
+    
+    filteredData.forEach(p => {
+        const stocks = p.stocks || {};
+        const row = {
+            'article': p.article, 'size': p.size, 'code': p.code, 'barcode': p.barcode,
+            'kiz': p.kiz_count || 0,
+            'stock_main': stocks['Основной'] || 0,
+            'stock_wb': stocks['WB FBS'] || 0,
+            'stock_ozon': stocks['Ozon FBS'] || 0,
+            'stock_dbs': stocks['DBS WB'] || 0,
+            'stock_wb_fbo': stocks['WB FBO'] || 0,
+            'stock_ozon_fbo': stocks['Ozon FBO'] || 0,
+            'stock_total': p.total_stock || 0,
+            'buy_price': p.buy_price ? (p.buy_price / 100).toFixed(2) : '',
+            'sale_price': p.sale_price ? (p.sale_price / 100).toFixed(2) : '',
+            'brand': p.brand
+        };
+        csv += visibleCols.map(c => row[c]).join(';') + '\n';
+    });
+    
+    const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'товары_' + new Date().toISOString().split('T')[0] + '.csv';
+    link.click();
+}
+
+// События
+document.getElementById('globalSearch').addEventListener('input', applyFilters);
+document.querySelectorAll('.filter-input').forEach(input => {
+    input.addEventListener('input', applyFilters);
+});
+document.querySelectorAll('.filter-select').forEach(select => {
+    select.addEventListener('change', applyFilters);
+});
+
+// Сканер
+let scannerBuffer = '';
+let scannerTimer;
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+        if (scannerBuffer.length > 5) {
+            const barcode = scannerBuffer.trim();
+            scannerBuffer = '';
+            const product = productsData.find(p => p.barcode === barcode);
+            if (product) {
+                document.querySelectorAll('#productsBody tr').forEach(r => r.classList.remove('table-warning'));
+                const idx = filteredData.indexOf(product);
+                if (idx >= 0) {
+                    const rows = document.querySelectorAll('#productsBody tr');
+                    if (rows[idx]) {
+                        rows[idx].classList.add('table-warning');
+                        rows[idx].scrollIntoView({behavior: 'smooth', block: 'center'});
+                    }
+                }
+            }
+        }
+    } else {
+        scannerBuffer += e.key;
+        clearTimeout(scannerTimer);
+        scannerTimer = setTimeout(() => scannerBuffer = '', 2000);
+    }
+});
+
+document.addEventListener('DOMContentLoaded', loadProducts);
+setInterval(loadProducts, 600000);
+</script>
+{% endblock %}

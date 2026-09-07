@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block title %}Уведомления{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h2>🔔 Уведомления: {{ user.full_name or user.email }}</h2>
+    
+    <div class="card mt-4" style="max-width: 500px;">
+        <div class="card-header">Предпочтительный способ уведомления</div>
+        <div class="card-body">
+            <form method="POST">
+                <div class="mb-3">
+                    <label class="form-label">Способ уведомления</label>
+                    <select class="form-select" name="preferred_notification">
+                        <option value="email" {% if user.preferred_notification == 'email' %}selected{% endif %}>📧 Email</option>
+                        <option value="telegram" {% if user.preferred_notification == 'telegram' %}selected{% endif %}>✈️ Telegram</option>
+                        <option value="whatsapp" {% if user.preferred_notification == 'whatsapp' %}selected{% endif %}>💬 WhatsApp</option>
+                        <option value="sms" {% if user.preferred_notification == 'sms' %}selected{% endif %}>📱 SMS</option>
+                    </select>
+                    <div class="field-hint">Этот способ будет использоваться по умолчанию при отправке уведомлений</div>
+                </div>
+                <button type="submit" class="btn btn-primary">💾 Сохранить</button>
+                <a href="{{ url_for('employees.index') }}" class="btn btn-secondary">Отмена</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

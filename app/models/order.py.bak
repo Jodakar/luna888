@@ -1,6 +1,5 @@
 from app import db
 from datetime import datetime
-from app.utils.time_utils import moscow_now
 
 class Order(db.Model):
     __tablename__ = 'orders'
@@ -16,8 +15,8 @@ class Order(db.Model):
     min_stock = db.Column(db.Integer, default=3)
     delivery_days = db.Column(db.Integer, default=7)
     sales_period = db.Column(db.String(10), default='30')
-    created_at = db.Column(db.DateTime, default=moscow_now())
-    updated_at = db.Column(db.DateTime, default=moscow_now(), onupdate=moscow_now())
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     supplier = db.relationship('Supplier', backref='orders')
     
@@ -30,7 +29,6 @@ class Order(db.Model):
             'status': self.status,
             'delivery_date': self.delivery_date.isoformat() if self.delivery_date else None,
             'created_at': self.created_at.isoformat() if self.created_at else None,
-            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
             'min_stock': self.min_stock,
             'is_sent': self.is_sent,
             'delivery_days': self.delivery_days,

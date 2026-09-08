@@ -3,6 +3,7 @@ import urllib3
 import re
 import time
 from datetime import datetime
+from app.utils.time_utils import moscow_now
 from app import db
 from app.models.product import Product, ProductStock
 from app.models.kiz import KIZ
@@ -192,7 +193,7 @@ def sync_from_moysklad():
         product.buy_price = buy_price
         product.sale_price = sale_price
         product.is_active = True
-        product.last_seen = datetime.utcnow()
+        product.last_seen = moscow_now()()
         
         synced_ids.append(product.id)
         db.session.flush()
@@ -220,10 +221,10 @@ def sync_from_moysklad():
             stock_record = ProductStock(product_id=product.id, store_name=store_name)
             db.session.add(stock_record)
         stock_record.stock = stock
-        stock_record.updated_at = datetime.utcnow()
+        stock_record.updated_at = moscow_now()()
     
     db.session.commit()
-    return {'success': True, 'count': len(synced_ids), 'sync_time': datetime.utcnow().isoformat()}
+    return {'success': True, 'count': len(synced_ids), 'sync_time': moscow_now()().isoformat()}
 
 
 def get_products_from_db(include_inactive=True):

@@ -1,5 +1,6 @@
 from app import db
 from datetime import datetime
+from app.utils.time_utils import moscow_now
 
 class KIZ(db.Model):
     __tablename__ = 'kizs'
@@ -9,7 +10,7 @@ class KIZ(db.Model):
     cis = db.Column(db.String(255), unique=True, index=True)  # Полный КИЗ
     gtin = db.Column(db.String(14))  # GTIN из КИЗа
     serial = db.Column(db.String(100))  # Серийный номер
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=moscow_now())
     
     product = db.relationship('Product', backref='kiz_list')
     

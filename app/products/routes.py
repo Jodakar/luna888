@@ -1,7 +1,9 @@
 from flask import Blueprint, render_template, jsonify
 from flask_login import login_required
 from app.services.sync_products import sync_from_moysklad, get_products_from_db
-from datetime import datetime, timezone, timedelta
+from datetime import datetime
+from app.utils.time_utils import moscow_now
+from datetime import timezone, timedelta
 import os
 
 products_bp = Blueprint('products', __name__)

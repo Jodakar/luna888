@@ -6,9 +6,7 @@ from app.models.order_settings import OrderSettings
 from app.models.product import Product
 from app.models.settings import get_setting
 from app import db
-from datetime import datetime
-from app.utils.time_utils import moscow_now
-from datetime import timedelta
+from datetime import datetime, timedelta
 import secrets
 
 orders_supplier_bp = Blueprint('orders_supplier', __name__)
@@ -202,79 +200,45 @@ def api_days_on_shelf():
     import requests as req
     import urllib3
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
+    
     token = get_setting('moysklad_token')
     if not token:
         return jsonify({'error': 'Токен не указан'})
-
+    
     session = req.Session()
     session.trust_env = False
     session.proxies = {'http': None, 'https': None}
     headers = {"Authorization": f"Bearer {token}", "Accept": "application/json;charset=utf-8"}
-
-    # 1. Собираем даты последних продаж (Demand, только проведённые)
-    sales_map = {}
-    offset = 0
-    while True:
-        demand_resp = session.get(
-            'https://api.moysklad.ru/api/remap/1.2/entity/demand',
-            headers=headers,
-            params={'limit': 100, 'offset': offset},
-            verify=False, timeout=60
-        )
-        if demand_resp.status_code != 200:
-            break
-        demands = demand_resp.json().get('rows', [])
-        if not demands:
-            break
-        for demand in demands:
-            if not demand.get('applicable', False):
-                continue
-            demand_date = demand.get('moment', '')[:10]
-            pos_resp = session.get(
-                f"https://api.moysklad.ru/api/remap/1.2/entity/demand/{demand.get('id')}/positions",
-                headers=headers, params={'limit': 1000}, verify=False, timeout=60
-            )
-            if pos_resp.status_code == 200:
-                for p in pos_resp.json().get('rows', []):
-                    v_href = p.get('assortment', {}).get('meta', {}).get('href', '')
-                    v_id = v_href.split('/')[-1] if v_href else ''
-                    if v_id and v_id not in sales_map:
-                        sales_map[v_id] = demand_date
-        offset += 100
-        if offset >= demand_resp.json().get('meta', {}).get('size', 0):
-            break
-
-    # 2. Собираем даты первых приёмок (Supply, только оприходованные)
-    supply_map = {}
+    
     response = session.get(
         'https://api.moysklad.ru/api/remap/1.2/entity/supply',
         headers=headers, verify=False, timeout=60
     )
-    if response.status_code == 200:
-        supplies = response.json().get('rows', [])
-        supplies.sort(key=lambda x: x.get('moment', ''))
-        
-        for supply in supplies:
-            if not supply.get('applicable', False):
-                continue
-            supply_date = supply.get('moment', '')[:10]
-            pos_resp = session.get(
-                f"https://api.moysklad.ru/api/remap/1.2/entity/supply/{supply.get('id')}/positions",
-                headers=headers, params={'limit': 1000}, verify=False, timeout=60
-            )
-            if pos_resp.status_code == 200:
-                for p in pos_resp.json().get('rows', []):
-                    v_href = p.get('assortment', {}).get('meta', {}).get('href', '')
-                    v_id = v_href.split('/')[-1] if v_href else ''
-                    if v_id and v_id not in sales_map and v_id not in supply_map:
-                        supply_map[v_id] = supply_date
-
-    # 3. Объединяем
+    
+    if response.status_code != 200:
+        return jsonify({'error': 'Ошибка API'})
+    
+    supplies = response.json().get('rows', [])
+    supplies.sort(key=lambda x: x.get('moment', ''), reverse=True)
+    
     days_map = {}
-    days_map.update(supply_map)
-    days_map.update(sales_map)
-
+    
+    for supply in supplies:
+        supply_date = supply.get('moment', '')[:10]
+        
+        pos_resp = session.get(
+            f"https://api.moysklad.ru/api/remap/1.2/entity/supply/{supply.get('id')}/positions",
+            headers=headers, params={'limit': 1000}, verify=False, timeout=60
+        )
+        
+        if pos_resp.status_code == 200:
+            for p in pos_resp.json().get('rows', []):
+                v_href = p.get('assortment', {}).get('meta', {}).get('href', '')
+                v_id = v_href.split('/')[-1] if v_href else ''
+                
+                if v_id and v_id not in days_map:
+                    days_map[v_id] = supply_date
+    
     return jsonify({'days_map': days_map})
 
 @orders_supplier_bp.route('/orders-supplier/api/suppliers')

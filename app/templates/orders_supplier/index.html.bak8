@@ -465,39 +465,7 @@ function renderSuppliers() {
 function fillSupplierSelect() {
     document.getElementById('supplierSelect').innerHTML = 
         '<option value="">Выберите...</option>' + 
-        suppliers.map(s => '<option value="' + s.id + '" data-brand="' + (s.name || '') + '">' + s.name + '</option>').join('');
-    
-    // Добавляем обработчик фильтрации
-    document.getElementById('supplierSelect').addEventListener('change', function() {
-        filterProductsBySupplier(this.value);
-    });
-}
-
-function filterProductsBySupplier(supplierId) {
-    const select = document.getElementById('supplierSelect');
-    const selectedOption = select.options[select.selectedIndex];
-    const supplierName = selectedOption ? selectedOption.dataset.brand : '';
-    
-    if (!supplierName || supplierName === 'Розничный покупатель') {
-        // Показываем все товары
-        renderOrderTable();
-        return;
-    }
-    
-    // Фильтруем товары по бренду
-    const filtered = products.filter(p => p.brand === supplierName);
-    
-    // Сохраняем оригинальный список
-    if (!window.allProducts) {
-        window.allProducts = [...products];
-    }
-    
-    // Подменяем products на отфильтрованный
-    products = filtered;
-    renderOrderTable();
-    
-    // Восстанавливаем полный список
-    products = [...window.allProducts];
+        suppliers.map(s => '<option value="' + s.id + '">' + s.name + '</option>').join('');
 }
 
 function openSupplierModal() {

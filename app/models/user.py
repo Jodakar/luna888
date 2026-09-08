@@ -1,6 +1,7 @@
 from app import db, login_manager
 from flask_login import UserMixin
 from datetime import datetime
+from app.utils.time_utils import moscow_now
 from werkzeug.security import generate_password_hash, check_password_hash
 
 class User(UserMixin, db.Model):
@@ -18,7 +19,7 @@ class User(UserMixin, db.Model):
     is_active = db.Column(db.Boolean, default=True)
     reset_code = db.Column(db.String(6))
     reset_code_expires = db.Column(db.DateTime)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=moscow_now())
     last_login = db.Column(db.DateTime)
     
     def set_password(self, password):

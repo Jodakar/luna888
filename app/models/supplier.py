@@ -1,5 +1,6 @@
 from app import db
 from datetime import datetime
+from app.utils.time_utils import moscow_now
 
 class Supplier(db.Model):
     __tablename__ = 'suppliers'
@@ -21,8 +22,8 @@ class Supplier(db.Model):
     director_name = db.Column(db.String(255))
     director_position = db.Column(db.String(255))
     is_active = db.Column(db.Boolean, default=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=moscow_now())
+    updated_at = db.Column(db.DateTime, default=moscow_now(), onupdate=moscow_now())
     
     def to_dict(self):
         return {

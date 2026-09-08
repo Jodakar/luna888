@@ -1,5 +1,6 @@
 from app import db
 from datetime import datetime
+from app.utils.time_utils import moscow_now
 
 class Product(db.Model):
     __tablename__ = 'products'
@@ -16,9 +17,9 @@ class Product(db.Model):
     buy_price = db.Column(db.Float, default=0)  # в копейках
     sale_price = db.Column(db.Float, default=0)  # в копейках
     is_active = db.Column(db.Boolean, default=True)
-    last_seen = db.Column(db.DateTime, default=datetime.utcnow)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    last_seen = db.Column(db.DateTime, default=moscow_now())
+    created_at = db.Column(db.DateTime, default=moscow_now())
+    updated_at = db.Column(db.DateTime, default=moscow_now(), onupdate=moscow_now())
     
     def to_dict(self):
         return {
@@ -44,6 +45,6 @@ class ProductStock(db.Model):
     product_id = db.Column(db.Integer, db.ForeignKey('products.id'), index=True)
     store_name = db.Column(db.String(100))  # Основной, WB FBS, Ozon FBS, DBS WB
     stock = db.Column(db.Integer, default=0)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=moscow_now(), onupdate=moscow_now())
     
     product = db.relationship('Product', backref='stocks')

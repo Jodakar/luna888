@@ -356,7 +356,6 @@ function loadProductsForOrder() {
         .then(res => res.json())
         .then(data => {
             products = data.products || [];
-            renderOrderTable();
             
             // Загружаем дни на складе
             return fetch('/orders-supplier/api/days-on-shelf', {credentials: 'same-origin'});
@@ -370,8 +369,7 @@ function loadProductsForOrder() {
 
 function renderOrderTable() {
     const tbody = document.getElementById('orderBody');
-    const minStockEl = document.getElementById('minStock');
-    const minStock = minStockEl ? (parseInt(minStockEl.value) || 0) : 0;
+    const minStock = parseInt(document.getElementById('minStock').value) || 0;
     
     if (products.length === 0) {
         tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">Нет данных</td></tr>';
@@ -465,39 +463,7 @@ function renderSuppliers() {
 function fillSupplierSelect() {
     document.getElementById('supplierSelect').innerHTML = 
         '<option value="">Выберите...</option>' + 
-        suppliers.map(s => '<option value="' + s.id + '" data-brand="' + (s.name || '') + '">' + s.name + '</option>').join('');
-    
-    // Добавляем обработчик фильтрации
-    document.getElementById('supplierSelect').addEventListener('change', function() {
-        filterProductsBySupplier(this.value);
-    });
-}
-
-function filterProductsBySupplier(supplierId) {
-    const select = document.getElementById('supplierSelect');
-    const selectedOption = select.options[select.selectedIndex];
-    const supplierName = selectedOption ? selectedOption.dataset.brand : '';
-    
-    if (!supplierName || supplierName === 'Розничный покупатель') {
-        // Показываем все товары
-        renderOrderTable();
-        return;
-    }
-    
-    // Фильтруем товары по бренду
-    const filtered = products.filter(p => p.brand === supplierName);
-    
-    // Сохраняем оригинальный список
-    if (!window.allProducts) {
-        window.allProducts = [...products];
-    }
-    
-    // Подменяем products на отфильтрованный
-    products = filtered;
-    renderOrderTable();
-    
-    // Восстанавливаем полный список
-    products = [...window.allProducts];
+        suppliers.map(s => '<option value="' + s.id + '">' + s.name + '</option>').join('');
 }
 
 function openSupplierModal() {
@@ -923,8 +889,7 @@ function recalculateRecommendations() {
     if (spinner) spinner.style.display = '';
     
     // Мгновенный пересчёт
-    const minStockEl = document.getElementById('minStock');
-    const minStock = minStockEl ? (parseInt(minStockEl.value) || 0) : 0;
+    const minStock = parseInt(document.getElementById('minStock').value) || 0;
     const rows = document.querySelectorAll('#orderBody tr');
     
     rows.forEach((row, index) => {
@@ -1078,8 +1043,7 @@ function sortItems(col) {
                 val_b = parseInt(getDaysOnShelf(b.variant_id)) || 999;
                 break;
             case 'recommended':
-                const minStockEl = document.getElementById('minStock');
-    const minStock = minStockEl ? (parseInt(minStockEl.value) || 0) : 0;
+                const minStock = parseInt(document.getElementById('minStock').value) || 0;
                 val_a = (a.total_stock || 0) < minStock ? minStock - (a.total_stock || 0) : 0;
                 val_b = (b.total_stock || 0) < minStock ? minStock - (b.total_stock || 0) : 0;
                 break;
@@ -1157,7 +1121,6 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(r => r.json())
             .then(data => {
                 products = data.products || [];
-                renderOrderTable();
                 return fetch('/orders-supplier/api/days-on-shelf', {credentials: 'same-origin'});
             })
             .then(r => r.json())

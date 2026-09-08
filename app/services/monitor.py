@@ -1,6 +1,7 @@
 import requests
 import urllib3
 from datetime import datetime
+from app.utils.time_utils import moscow_now
 from app.models.settings import get_setting
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -95,5 +96,5 @@ def check_all_tokens():
         'moysklad': check_moysklad_token(),
         'wb': check_wb_token(),
         'ozon': check_ozon_token(),
-        'checked_at': datetime.utcnow().isoformat()
+        'checked_at': moscow_now()().isoformat()
     }

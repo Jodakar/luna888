@@ -2,7 +2,9 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_user, logout_user, login_required, current_user
 from app.models.user import User
 from app import db
-from datetime import datetime, timedelta
+from datetime import datetime
+from app.utils.time_utils import moscow_now
+from datetime import timedelta
 import random
 import smtplib
 from email.mime.text import MIMEText
@@ -51,7 +53,7 @@ def login():
         
         if user and user.check_password(password):
             login_user(user)
-            user.last_login = datetime.utcnow()
+            user.last_login = moscow_now()()
             db.session.commit()
             return redirect(url_for('products.index'))
         
@@ -68,7 +70,7 @@ def reset_password():
         if user:
             code = str(random.randint(100000, 999999))
             user.reset_code = code
-            user.reset_code_expires = datetime.utcnow() + timedelta(minutes=15)
+            user.reset_code_expires = moscow_now()() + timedelta(minutes=15)
             db.session.commit()
             
             if send_reset_email(email, code):
@@ -90,7 +92,7 @@ def reset_confirm(email):
         
         user = User.query.filter_by(email=email).first()
         
-        if user and user.reset_code == code and user.reset_code_expires > datetime.utcnow():
+        if user and user.reset_code == code and user.reset_code_expires > moscow_now()():
             user.set_password(new_password)
             user.reset_code = None
             user.reset_code_expires = None

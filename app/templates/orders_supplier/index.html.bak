@@ -326,19 +326,10 @@ function renderOrders() {
             + '<td>' + o.order_number + '</td>'
             + '<td>' + (o.supplier_name || '—') + '</td>'
             + '<td>' + statusBadge + delivery + '</td>'
-            + '<td>' + formatDateTime(o.updated_at || o.created_at) + '</td>'
+            + '<td>' + new Date(o.created_at).toLocaleDateString('ru-RU') + '</td>'
             + '<td><button class="btn btn-sm btn-outline-danger" onclick="event.stopPropagation(); deleteOrder(' + o.id + ', \'' + o.order_number + '\')">🗑️</button></td>'
             + '</tr>';
     }).join('');
-}
-
-function formatDateTime(isoDate) {
-    if (!isoDate) return '—';
-    const d = new Date(isoDate);
-    const dd = String(d.getDate()).padStart(2, '0');
-    const mm = String(d.getMonth() + 1).padStart(2, '0');
-    const yyyy = d.getFullYear();
-    return dd + '.' + mm + '.' + yyyy + ' ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
 }
 
 function openOrder(id) {
@@ -356,7 +347,6 @@ function loadProductsForOrder() {
         .then(res => res.json())
         .then(data => {
             products = data.products || [];
-            renderOrderTable();
             
             // Загружаем дни на складе
             return fetch('/orders-supplier/api/days-on-shelf', {credentials: 'same-origin'});
@@ -370,8 +360,7 @@ function loadProductsForOrder() {
 
 function renderOrderTable() {
     const tbody = document.getElementById('orderBody');
-    const minStockEl = document.getElementById('minStock');
-    const minStock = minStockEl ? (parseInt(minStockEl.value) || 0) : 0;
+    const minStock = parseInt(document.getElementById('minStock').value) || 0;
     
     if (products.length === 0) {
         tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">Нет данных</td></tr>';
@@ -465,39 +454,7 @@ function renderSuppliers() {
 function fillSupplierSelect() {
     document.getElementById('supplierSelect').innerHTML = 
         '<option value="">Выберите...</option>' + 
-        suppliers.map(s => '<option value="' + s.id + '" data-brand="' + (s.name || '') + '">' + s.name + '</option>').join('');
-    
-    // Добавляем обработчик фильтрации
-    document.getElementById('supplierSelect').addEventListener('change', function() {
-        filterProductsBySupplier(this.value);
-    });
-}
-
-function filterProductsBySupplier(supplierId) {
-    const select = document.getElementById('supplierSelect');
-    const selectedOption = select.options[select.selectedIndex];
-    const supplierName = selectedOption ? selectedOption.dataset.brand : '';
-    
-    if (!supplierName || supplierName === 'Розничный покупатель') {
-        // Показываем все товары
-        renderOrderTable();
-        return;
-    }
-    
-    // Фильтруем товары по бренду
-    const filtered = products.filter(p => p.brand === supplierName);
-    
-    // Сохраняем оригинальный список
-    if (!window.allProducts) {
-        window.allProducts = [...products];
-    }
-    
-    // Подменяем products на отфильтрованный
-    products = filtered;
-    renderOrderTable();
-    
-    // Восстанавливаем полный список
-    products = [...window.allProducts];
+        suppliers.map(s => '<option value="' + s.id + '">' + s.name + '</option>').join('');
 }
 
 function openSupplierModal() {
@@ -923,8 +880,7 @@ function recalculateRecommendations() {
     if (spinner) spinner.style.display = '';
     
     // Мгновенный пересчёт
-    const minStockEl = document.getElementById('minStock');
-    const minStock = minStockEl ? (parseInt(minStockEl.value) || 0) : 0;
+    const minStock = parseInt(document.getElementById('minStock').value) || 0;
     const rows = document.querySelectorAll('#orderBody tr');
     
     rows.forEach((row, index) => {
@@ -1029,7 +985,7 @@ function applyOrderFilters() {
                 o.order_number || '',
                 o.supplier_name || '',
                 statusText,
-                formatDateTime(o.updated_at || o.created_at)
+                new Date(o.created_at).toLocaleDateString('ru-RU')
             ];
             
             if (!searchFields.some(f => f.toLowerCase().includes(searchText))) return false;
@@ -1043,7 +999,7 @@ function applyOrderFilters() {
             if (col === 'status') {
                 fieldValue = o.status === 'confirmed' ? 'подтверждён' : 'ожидает';
             } else if (col === 'created_at') {
-                fieldValue = formatDateTime(o.updated_at || o.created_at);
+                fieldValue = new Date(o.created_at).toLocaleDateString('ru-RU');
             } else {
                 fieldValue = String(o[col] || '').toLowerCase();
             }
@@ -1078,8 +1034,7 @@ function sortItems(col) {
                 val_b = parseInt(getDaysOnShelf(b.variant_id)) || 999;
                 break;
             case 'recommended':
-                const minStockEl = document.getElementById('minStock');
-    const minStock = minStockEl ? (parseInt(minStockEl.value) || 0) : 0;
+                const minStock = parseInt(document.getElementById('minStock').value) || 0;
                 val_a = (a.total_stock || 0) < minStock ? minStock - (a.total_stock || 0) : 0;
                 val_b = (b.total_stock || 0) < minStock ? minStock - (b.total_stock || 0) : 0;
                 break;
@@ -1157,7 +1112,6 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(r => r.json())
             .then(data => {
                 products = data.products || [];
-                renderOrderTable();
                 return fetch('/orders-supplier/api/days-on-shelf', {credentials: 'same-origin'});
             })
             .then(r => r.json())
@@ -1169,6 +1123,62 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.error('Ошибка загрузки:', err);
                 document.getElementById('orderBody').innerHTML = '<tr><td colspan="7" class="text-center text-danger">Ошибка загрузки данных</td></tr>';
             });
+        document.getElementById('ordersCard').style.display = 'none';
+        document.getElementById('suppliersCard').style.display = 'none';
+        document.getElementById('orderCard').style.display = '';
+        
+        currentOrderId = orderId;
+        
+        // Загружаем данные заказа
+        loadSuppliers().then(() => {
+            return fetch('/orders-supplier/api/order/' + orderId + '/data', {credentials: 'same-origin'});
+        })
+        .then(res => res.json())
+        .then(data => {
+            const order = data.order;
+            document.getElementById('orderTitle').textContent = 'Заказ ' + order.order_number;
+            document.getElementById('orderNumber').textContent = order.order_number;
+            currentOrderStatus = order.status;
+            
+            // Заполняем поставщика
+            document.getElementById('supplierSelect').value = data.supplier_id || '';
+            
+            if (order.status === 'confirmed') {
+                document.getElementById('orderButtons').style.display = 'none';
+                // Блокируем редактирование
+                document.getElementById('supplierSelect').disabled = true;
+            } else {
+                document.getElementById('orderButtons').style.display = '';
+                document.getElementById('supplierSelect').disabled = false;
+            }
+            
+            return loadProductsForOrder();
+        })
+        .then(() => {
+            // Заполняем количество
+            return fetch('/orders-supplier/api/order/' + orderId + '/data', {credentials: 'same-origin'});
+        })
+        .then(res => res.json())
+        .then(data => {
+            const items = data.items || [];
+            const rows = document.querySelectorAll('#orderBody tr');
+            
+            rows.forEach(row => {
+                const articleCell = row.querySelector('.col-article');
+                const sizeCell = row.querySelector('.col-size');
+                const qtyInput = row.querySelector('input[type="number"]');
+                
+                if (articleCell && sizeCell && qtyInput) {
+                    const article = articleCell.textContent.trim();
+                    const size = sizeCell.textContent.trim();
+                    
+                    const item = items.find(i => i.article === article && i.size === size);
+                    if (item) {
+                        qtyInput.value = item.quantity;
+                    }
+                }
+            });
+        });
     }
     // Для main-страницы (не new/view)
     if (!mode) {

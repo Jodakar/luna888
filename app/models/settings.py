@@ -1,5 +1,6 @@
 from app import db
 from datetime import datetime
+from app.utils.time_utils import moscow_now
 from cryptography.fernet import Fernet
 import os
 
@@ -10,7 +11,7 @@ class Settings(db.Model):
     key = db.Column(db.String(100), unique=True, nullable=False)
     value = db.Column(db.Text)
     is_encrypted = db.Column(db.Boolean, default=False)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=moscow_now(), onupdate=moscow_now())
 
 def get_encryption_key():
     """Ключ шифрования"""

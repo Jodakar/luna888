@@ -1,8 +1,727 @@
 {% extends 'base.html' %}
-{% block title %}LUNA888 - orders_mp{% endblock %}
+{% block title %}Маркетплейсы{% endblock %}
 {% block content %}
-<div class="container mt-4">
-    <h2>orders_mp</h2>
-    <p>Модуль в разработке</p>
+<div class="container mt-4" style="max-width: 1400px;">
+    <h4>🏪 Маркетплейсы</h4>
+    
+    <ul class="nav nav-tabs mt-3" id="mpTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="wb-tab" data-bs-toggle="tab" data-bs-target="#wb" type="button" role="tab">
+                🟣 Wildberries
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="ozon-tab" data-bs-toggle="tab" data-bs-target="#ozon" type="button" role="tab">
+                🔵 Ozon
+            </button>
+        </li>
+    </ul>
+    
+    <div class="tab-content mt-3" id="mpTabsContent">
+        <!-- WB -->
+        <div class="tab-pane fade show active" id="wb" role="tabpanel">
+            <!-- Сводка -->
+            <div class="row mb-3" id="wbStats">
+                <div class="col-md-2">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body text-center py-3">
+                            <h4 id="wbOrdersCount">—</h4>
+                            <small>Заказы</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="card bg-success text-white">
+                        <div class="card-body text-center py-3">
+                            <h4 id="wbSalesCount">—</h4>
+                            <small>Продажи</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="card bg-warning text-dark">
+                        <div class="card-body text-center py-3">
+                            <h4 id="wbSuppliesCount">—</h4>
+                            <small>Поставки</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="card bg-info text-white">
+                        <div class="card-body text-center py-3">
+                            <h4 id="wbReturnsCount">—</h4>
+                            <small>Возвраты</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="card bg-secondary text-white">
+                        <div class="card-body text-center py-3">
+                            <h4 id="wbWarehousesCount">—</h4>
+                            <small>Склады</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="card bg-dark text-white">
+                        <div class="card-body text-center py-3">
+                            <h6 id="lastSync" class="mb-0">—</h6>
+                            <small>Синхронизация</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Вкладки WB -->
+            <ul class="nav nav-pills mb-3" id="wbSubTabs" role="tablist">
+                <li class="nav-item">
+                    <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#wbOrders" type="button">📦 Заказы</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="pill" data-bs-target="#wbSales" type="button">💰 Продажи</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="pill" data-bs-target="#wbSupplies" type="button">🚚 Поставки</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="pill" data-bs-target="#wbReturns" type="button">↩️ Возвраты</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="pill" data-bs-target="#wbShipping" type="button">📦 Отгрузки</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="pill" data-bs-target="#wbReceiving" type="button">📥 Приёмка возвратов</button>
+                </li>
+            </ul>
+            
+            <div class="tab-content">
+                <!-- Заказы -->
+                <div class="tab-pane fade show active" id="wbOrders">
+                    <div class="card">
+                        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                            <span>Заказы Wildberries</span>
+                            <div>
+                                <input type="text" id="searchOrders" class="form-control form-control-sm d-inline-block" style="width: 200px;" placeholder="🔍 Поиск...">
+                                <button class="btn btn-sm btn-outline-light" onclick="exportToExcel(filteredOrders, 'wb_orders.csv')">📊 Excel</button>
+                                <button class="btn btn-sm btn-outline-light" onclick="showColumns()">📋 Колонки</button>
+                                <button class="btn btn-sm btn-outline-light" onclick="loadWBOrders()">🔄</button>
+                            </div>
+                        </div>
+                        <div class="card-body p-2">
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover" id="wbOrdersTable">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Артикул</th>
+                                            <th>Баркод</th>
+                                            <th>Статус</th>
+                                            <th>Цена</th>
+                                            <th>Склад</th>
+                                            <th>Дата</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="wbOrdersBody">
+                                        <tr><td colspan="7" class="text-center">Загрузка...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Продажи -->
+                <div class="tab-pane fade" id="wbSales">
+                    <div class="card">
+                        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                            <span>Продажи (статистика)</span>
+                            <div>
+                                <input type="text" id="searchSales" class="form-control form-control-sm d-inline-block" style="width: 200px;" placeholder="🔍 Поиск...">
+                                <button class="btn btn-sm btn-outline-light" onclick="exportToExcel(filteredSales, 'wb_sales.csv')">📊 Excel</button>
+                            </div>
+                        </div>
+                        <div class="card-body p-2">
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>Артикул</th>
+                                            <th>Размер</th>
+                                            <th>Баркод</th>
+                                            <th>Сумма</th>
+                                            <th>К оплате</th>
+                                            <th>Дата</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="wbSalesBody">
+                                        <tr><td colspan="6" class="text-center">Загрузка...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Поставки -->
+                <div class="tab-pane fade" id="wbSupplies">
+                    <div class="card">
+                        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                            <span>Поставки</span>
+                            <button class="btn btn-sm btn-outline-light" onclick="exportToExcel(filteredSupplies, 'wb_supplies.csv')">📊 Excel</button>
+                        </div>
+                        <div class="card-body p-2">
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Название</th>
+                                            <th>Статус</th>
+                                            <th>Создана</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="wbSuppliesBody">
+                                        <tr><td colspan="4" class="text-center">Загрузка...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Отгрузки -->
+                <div class="tab-pane fade" id="wbShipping">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                            <span>📦 Отгрузки — сборка заказов</span>
+                            <div>
+                                <input type="text" id="shippingScanner" class="form-control form-control-sm d-inline-block" style="width: 250px;" placeholder="🔍 Сканер ШК...">
+                            </div>
+                        </div>
+                        <div class="card-body p-2">
+                            <div class="alert alert-info">
+                                Отсканируйте штрихкод товара. Если товар найден — он добавится в отгрузку.
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-sm" id="shippingTable">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>Артикул</th>
+                                            <th>Размер</th>
+                                            <th>Баркод</th>
+                                            <th>Количество</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="shippingBody">
+                                        <tr><td colspan="4" class="text-center">Отсканируйте товар</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <button class="btn btn-success btn-sm mt-2" onclick="createShipping()">✅ Создать отгрузку в МойСклад</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Приёмка возвратов -->
+                <div class="tab-pane fade" id="wbReceiving">
+                    <div class="card">
+                        <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                            <span>📥 Приёмка возвратов</span>
+                            <div>
+                                <input type="text" id="receivingScanner" class="form-control form-control-sm d-inline-block" style="width: 250px;" placeholder="🔍 Сканер ШК...">
+                            </div>
+                        </div>
+                        <div class="card-body p-2">
+                            <div class="alert alert-info">
+                                Отсканируйте штрихкод возвращённого товара.
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-sm" id="receivingTable">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>Артикул</th>
+                                            <th>Размер</th>
+                                            <th>Баркод</th>
+                                            <th>Количество</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="receivingBody">
+                                        <tr><td colspan="4" class="text-center">Отсканируйте товар</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <button class="btn btn-success btn-sm mt-2" onclick="createReceiving()">✅ Создать приёмку в МойСклад</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Возвраты -->
+                <div class="tab-pane fade" id="wbReturns">
+                    <div class="card">
+                        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                            <span>Возвраты</span>
+                            <button class="btn btn-sm btn-outline-light" onclick="exportToExcel(filteredReturns, 'wb_returns.csv')">📊 Excel</button>
+                        </div>
+                        <div class="card-body p-2">
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>Артикул</th>
+                                            <th>Баркод</th>
+                                            <th>Статус</th>
+                                            <th>Дата</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="wbReturnsBody">
+                                        <tr><td colspan="4" class="text-center">Загрузка...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Ozon -->
+        <div class="tab-pane fade" id="ozon" role="tabpanel">
+            <div class="alert alert-secondary">
+                <h5>🔵 Ozon</h5>
+                <p>Модуль в разработке. Планируется интеграция.</p>
+            </div>
+        </div>
+    </div>
+
+<!-- Модальное окно настройки колонок -->
+<div class="modal fade" id="columnsModal" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title">Настройка колонок</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="columnToggles"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+            </div>
+        </div>
+    </div>
 </div>
+
+<script>
+let wbOrdersData = [];
+let wbSalesData = [];
+let wbSuppliesData = [];
+let wbReturnsData = [];
+let filteredOrders = [];
+let filteredSales = [];
+let filteredSupplies = [];
+let filteredReturns = [];
+let sortCol = null;
+let sortDir = 1;
+
+function formatDate(isoDate) {
+    if (!isoDate) return '—';
+    const d = new Date(isoDate);
+    const dd = String(d.getDate()).padStart(2, '0');
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const yyyy = d.getFullYear();
+    return dd + '.' + mm + '.' + yyyy + ' ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+}
+
+function loadWBOrders() {
+    fetch('/marketplace/api/wb-orders', {credentials: 'same-origin'})
+        .then(res => res.json())
+        .then(data => {
+            wbOrdersData = data.orders || [];
+            filteredOrders = [...wbOrdersData];
+            document.getElementById('wbOrdersCount').textContent = wbOrdersData.length;
+            renderOrders();
+        });
+}
+
+function renderOrders() {
+    const tbody = document.getElementById('wbOrdersBody');
+    if (filteredOrders.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center">Нет заказов</td></tr>';
+        return;
+    }
+    tbody.innerHTML = filteredOrders.map(o => {
+        let badge;
+        switch(o.status) {
+            case 'new':
+                badge = '<span class="badge bg-info">🆕 Новый</span>';
+                break;
+            case 'confirm':
+                badge = '<span class="badge bg-warning text-dark">📦 На сборке</span>';
+                break;
+            case 'deliver':
+                badge = '<span class="badge bg-primary">🚚 В доставке</span>';
+                break;
+            case 'done':
+                badge = '<span class="badge bg-success">✅ Завершён</span>';
+                break;
+            case 'canceled':
+                badge = '<span class="badge bg-danger">❌ Отменён</span>';
+                break;
+            case 'archive':
+                badge = '<span class="badge bg-secondary">📁 Архив</span>';
+                break;
+            default:
+                badge = '<span class="badge bg-light text-dark">' + (o.status || 'new') + '</span>';
+        }
+        
+        return '<tr>'
+        + '<td>' + o.wb_order_id + '</td>'
+        + '<td>' + (o.article || '—') + '</td>'
+        + '<td>' + (o.barcode || '—') + '</td>'
+        + '<td>' + badge + '</td>'
+        + '<td>' + (o.price ? o.price.toFixed(2) + ' ₽' : '—') + '</td>'
+        + '<td>' + (o.warehouse_id || '—') + '</td>'
+        + '<td>' + formatDate(o.created_at) + '</td>'
+        + '</tr>';
+    }).join('');
+}
+
+function loadWBSales() {
+    fetch('/marketplace/api/wb-sales', {credentials: 'same-origin'})
+        .then(res => res.json())
+        .then(data => {
+            wbSalesData = data.sales || [];
+            filteredSales = [...wbSalesData];
+            document.getElementById('wbSalesCount').textContent = wbSalesData.length;
+            renderSales();
+        });
+}
+
+function renderSales() {
+    const tbody = document.getElementById('wbSalesBody');
+    if (filteredSales.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center">Нет продаж</td></tr>';
+        return;
+    }
+    tbody.innerHTML = filteredSales.map(s => 
+        '<tr>'
+        + '<td>' + (s.article || '—') + '</td>'
+        + '<td>' + (s.size || '—') + '</td>'
+        + '<td>' + (s.barcode || '—') + '</td>'
+        + '<td>' + (s.total_price ? s.total_price.toFixed(2) + ' ₽' : '—') + '</td>'
+        + '<td>' + (s.for_pay ? s.for_pay.toFixed(2) + ' ₽' : '—') + '</td>'
+        + '<td>' + formatDate(s.sale_date) + '</td>'
+        + '</tr>'
+    ).join('');
+}
+
+function loadWBSupplies() {
+    fetch('/marketplace/api/wb-supplies', {credentials: 'same-origin'})
+        .then(res => res.json())
+        .then(data => {
+            wbSuppliesData = data.supplies || [];
+            filteredSupplies = [...wbSuppliesData];
+            document.getElementById('wbSuppliesCount').textContent = wbSuppliesData.length;
+            renderSupplies();
+        });
+}
+
+function renderSupplies() {
+    const tbody = document.getElementById('wbSuppliesBody');
+    if (filteredSupplies.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center">Нет поставок</td></tr>';
+        return;
+    }
+    tbody.innerHTML = filteredSupplies.map(s => 
+        '<tr>'
+        + '<td>' + s.supply_id + '</td>'
+        + '<td>' + (s.name || '—') + '</td>'
+        + '<td>' + (s.status || '—') + '</td>'
+        + '<td>' + formatDate(s.created_at) + '</td>'
+        + '</tr>'
+    ).join('');
+}
+
+function loadWBReturns() {
+    fetch('/marketplace/api/wb-returns', {credentials: 'same-origin'})
+        .then(res => res.json())
+        .then(data => {
+            wbReturnsData = data.returns || [];
+            filteredReturns = [...wbReturnsData];
+            document.getElementById('wbReturnsCount').textContent = wbReturnsData.length;
+            renderReturns();
+        });
+}
+
+function renderReturns() {
+    const tbody = document.getElementById('wbReturnsBody');
+    if (filteredReturns.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center">Нет возвратов</td></tr>';
+        return;
+    }
+    tbody.innerHTML = filteredReturns.map(r => 
+        '<tr>'
+        + '<td>' + (r.article || '—') + '</td>'
+        + '<td>' + (r.barcode || '—') + '</td>'
+        + '<td>' + (r.status || '—') + '</td>'
+        + '<td>' + formatDate(r.created_at) + '</td>'
+        + '</tr>'
+    ).join('');
+}
+
+// Глобальный поиск
+document.getElementById('searchOrders')?.addEventListener('input', function() {
+    const search = this.value.toLowerCase();
+    filteredOrders = wbOrdersData.filter(o => 
+        String(o.wb_order_id).includes(search) ||
+        (o.article || '').toLowerCase().includes(search) ||
+        (o.barcode || '').toLowerCase().includes(search) ||
+        (o.status || '').toLowerCase().includes(search)
+    );
+    renderOrders();
+});
+
+document.getElementById('searchSales')?.addEventListener('input', function() {
+    const search = this.value.toLowerCase();
+    filteredSales = wbSalesData.filter(s => 
+        (s.article || '').toLowerCase().includes(search) ||
+        (s.barcode || '').toLowerCase().includes(search)
+    );
+    renderSales();
+});
+
+// Сортировка
+function sortTable(col, data, renderFn) {
+    if (sortCol === col) sortDir *= -1;
+    else { sortCol = col; sortDir = 1; }
+    
+    data.sort((a, b) => {
+        const va = String(a[col] || '');
+        const vb = String(b[col] || '');
+        return va.localeCompare(vb) * sortDir;
+    });
+    renderFn();
+}
+
+// Excel
+function exportToExcel(data, filename) {
+    if (data.length === 0) {
+        alert('Нет данных');
+        return;
+    }
+    const headers = Object.keys(data[0]);
+    let csv = '\uFEFF' + headers.join(';') + '\n';
+    data.forEach(row => {
+        csv += headers.map(h => row[h] || '').join(';') + '\n';
+    });
+    const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    link.click();
+}
+
+// Настройка колонок
+const columnsConfig = {
+    orders: ['wb_order_id', 'article', 'barcode', 'status', 'price', 'warehouse_id', 'created_at'],
+    sales: ['article', 'size', 'barcode', 'total_price', 'for_pay', 'sale_date'],
+    supplies: ['supply_id', 'name', 'status', 'created_at'],
+    returns: ['article', 'barcode', 'status', 'created_at']
+};
+
+const columnNames = {
+    wb_order_id: 'ID', article: 'Артикул', barcode: 'Баркод', status: 'Статус',
+    price: 'Цена', warehouse_id: 'Склад', created_at: 'Дата',
+    size: 'Размер', total_price: 'Сумма', for_pay: 'К оплате', sale_date: 'Дата продажи',
+    supply_id: 'ID поставки', name: 'Название'
+};
+
+let activeColumns = {};
+
+function showColumns() {
+    const container = document.getElementById('columnToggles');
+    const currentTab = document.querySelector('.tab-pane.active .nav-link.active')?.id;
+    let cols = columnsConfig.orders;
+    
+    container.innerHTML = cols.map(col => 
+        '<div class="form-check">'
+        + '<input class="form-check-input column-toggle" type="checkbox" data-col="' + col + '" checked>'
+        + '<label class="form-check-label">' + (columnNames[col] || col) + '</label>'
+        + '</div>'
+    ).join('');
+    
+    document.querySelectorAll('.column-toggle').forEach(cb => {
+        cb.addEventListener('change', function() {
+            toggleColumn(this.dataset.col, this.checked);
+        });
+    });
+    
+    new bootstrap.Modal(document.getElementById('columnsModal')).show();
+}
+
+function toggleColumn(col, show) {
+    document.querySelectorAll('th[data-col="' + col + '"], td[data-col="' + col + '"]').forEach(el => {
+        el.style.display = show ? '' : 'none';
+    });
+}
+
+// Сортировка по клику
+document.querySelectorAll('th[data-sort]').forEach(th => {
+    th.style.cursor = 'pointer';
+    th.addEventListener('click', function() {
+        const col = this.dataset.sort;
+        const tableId = this.closest('table').id;
+        
+        if (sortCol === col) sortDir *= -1;
+        else { sortCol = col; sortDir = 1; }
+        
+        if (tableId === 'wbOrdersTable') sortTable(col, filteredOrders, renderOrders);
+        else if (tableId === 'wbSalesTable') sortTable(col, filteredSales, renderSales);
+        else if (tableId === 'wbSuppliesTable') sortTable(col, filteredSupplies, renderSupplies);
+        else if (tableId === 'wbReturnsTable') sortTable(col, filteredReturns, renderReturns);
+    });
+});
+
+// Сканеры для отгрузки и приёмки
+let shippingItems = [];
+let receivingItems = [];
+
+document.getElementById('shippingScanner')?.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        const barcode = this.value.trim();
+        if (barcode) {
+            addShippingItem(barcode);
+            this.value = '';
+        }
+    }
+});
+
+document.getElementById('receivingScanner')?.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        const barcode = this.value.trim();
+        if (barcode) {
+            addReceivingItem(barcode);
+            this.value = '';
+        }
+    }
+});
+
+function addShippingItem(barcode) {
+    fetch('/marketplace/api/scan?barcode=' + encodeURIComponent(barcode), {credentials: 'same-origin'})
+        .then(res => res.json())
+        .then(data => {
+            if (data.product) {
+                shippingItems.push(data.product);
+                renderShipping();
+            } else {
+                alert('Товар не найден: ' + barcode);
+            }
+        });
+}
+
+function addReceivingItem(barcode) {
+    fetch('/marketplace/api/scan?barcode=' + encodeURIComponent(barcode), {credentials: 'same-origin'})
+        .then(res => res.json())
+        .then(data => {
+            if (data.product) {
+                receivingItems.push(data.product);
+                renderReceiving();
+            } else {
+                alert('Товар не найден: ' + barcode);
+            }
+        });
+}
+
+function renderShipping() {
+    const tbody = document.getElementById('shippingBody');
+    if (shippingItems.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center">Отсканируйте товар</td></tr>';
+        return;
+    }
+    tbody.innerHTML = shippingItems.map(p => 
+        '<tr>'
+        + '<td>' + p.article + '</td>'
+        + '<td>' + p.size + '</td>'
+        + '<td>' + p.barcode + '</td>'
+        + '<td>1</td>'
+        + '</tr>'
+    ).join('');
+}
+
+function renderReceiving() {
+    const tbody = document.getElementById('receivingBody');
+    if (receivingItems.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center">Отсканируйте товар</td></tr>';
+        return;
+    }
+    tbody.innerHTML = receivingItems.map(p => 
+        '<tr>'
+        + '<td>' + p.article + '</td>'
+        + '<td>' + p.size + '</td>'
+        + '<td>' + p.barcode + '</td>'
+        + '<td>1</td>'
+        + '</tr>'
+    ).join('');
+}
+
+function createShipping() {
+    if (shippingItems.length === 0) {
+        alert('Нет товаров для отгрузки');
+        return;
+    }
+    fetch('/marketplace/api/create-shipping', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({items: shippingItems})
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            alert('✅ Отгрузка создана в МойСклад: ' + (data.demand.name || data.demand.demand_id));
+            shippingItems = [];
+            renderShipping();
+        } else {
+            alert('❌ Ошибка: ' + (data.error || 'неизвестно'));
+        }
+    })
+    .catch(err => alert('❌ Ошибка: ' + err.message));
+}
+
+function createReceiving() {
+    if (receivingItems.length === 0) {
+        alert('Нет товаров для приёмки');
+        return;
+    }
+    fetch('/marketplace/api/create-receiving', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({items: receivingItems})
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            alert('✅ Приёмка создана в МойСклад: ' + (data.supply.name || data.supply.supply_id));
+            receivingItems = [];
+            renderReceiving();
+        } else {
+            alert('❌ Ошибка: ' + (data.error || 'неизвестно'));
+        }
+    })
+    .catch(err => alert('❌ Ошибка: ' + err.message));
+}
+
+// Загружаем всё
+document.addEventListener('DOMContentLoaded', function() {
+    loadWBOrders();
+    loadWBSales();
+    loadWBSupplies();
+    loadWBReturns();
+    document.getElementById('wbWarehousesCount').textContent = '3';
+    document.getElementById('lastSync').textContent = formatDate(new Date());
+});
+</script>
 {% endblock %}

@@ -96,5 +96,5 @@ def check_all_tokens():
         'moysklad': check_moysklad_token(),
         'wb': check_wb_token(),
         'ozon': check_ozon_token(),
-        'checked_at': moscow_now()().isoformat()
+        'checked_at': moscow_now().isoformat()
     }

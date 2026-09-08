@@ -11,7 +11,7 @@ class Settings(db.Model):
     key = db.Column(db.String(100), unique=True, nullable=False)
     value = db.Column(db.Text)
     is_encrypted = db.Column(db.Boolean, default=False)
-    updated_at = db.Column(db.DateTime, default=moscow_now(), onupdate=moscow_now())
+    updated_at = db.Column(db.DateTime, default=moscow_now, onupdate=moscow_now)
 
 def get_encryption_key():
     """Ключ шифрования"""

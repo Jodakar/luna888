@@ -10,3 +10,4 @@ temp/
 .secret_key
 token_status.json
 sync_monitor_state.json
+*.bak

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Подтверждение заказа</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .confirm-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 500px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="confirm-card">
+        <h3 class="text-center mb-4">📦 Подтверждение заказа</h3>
+        <p class="text-center">Заказ: <strong>{{ order.order_number }}</strong></p>
+        
+        <form method="POST" action="{{ url_for('orders_supplier.submit_confirm', link=order.confirmation_link) }}" id="confirmForm">
+            <div class="mb-3">
+                <label class="form-label">Укажите дату поставки на склад:</label>
+                <input type="date" class="form-control" name="delivery_date" id="deliveryDate" required>
+            </div>
+            <button type="submit" class="btn btn-success w-100" id="confirmBtn" disabled>✅ Подтвердить</button>
+        </form>
+    </div>
+    
+    <script>
+        // Устанавливаем сегодняшнюю дату
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('deliveryDate').value = today;
+        document.getElementById('deliveryDate').min = today;
+        
+        // Активируем кнопку только если дата > сегодня
+        document.getElementById('deliveryDate').addEventListener('change', function() {
+            const selected = this.value;
+            const todayStr = new Date().toISOString().split('T')[0];
+            document.getElementById('confirmBtn').disabled = selected <= todayStr;
+        });
+    </script>
+</body>
+</html>

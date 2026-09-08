@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+{% block title %}Отправка заказа{% endblock %}
+{% block content %}
+<div class="container mt-4" style="max-width: 800px;">
+    <h3>📤 Отправка заказа {{ order.order_number }}</h3>
+    
+    <form id="sendForm" method="POST" action="{{ url_for('orders_supplier.send_order_submit', order_id=order.id) }}" enctype="multipart/form-data">
+        <div class="card mt-3">
+            <div class="card-header">Данные письма</div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">От кого (юрлицо) *</label>
+                        <select class="form-select" name="organization_id" id="orgSelect" required>
+                            <option value="">Выберите...</option>
+                            {% for org in organizations %}
+                            <option value="{{ org.id }}">{{ org.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Кому *</label>
+                        <input type="email" class="form-control" name="to_email" value="{{ supplier_email }}" readonly>
+                    </div>
+                </div>
+                
+                <div id="ccFields">
+                    <div class="mb-3">
+                        <label class="form-label">Копия</label>
+                        <select class="form-select cc-select" name="cc_0">
+                            <option value="">Выберите...</option>
+                            {% for emp in employees %}
+                            <option value="{{ emp.email }}">{{ emp.full_name or emp.email }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="addCc()">+ Добавить копию</button>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Тема *</label>
+                    <input type="text" class="form-control" name="subject" id="subjectField" required>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Сообщение</label>
+                    <textarea class="form-control" name="message" rows="5">Здравствуйте!
+
+Заказ в файле.
+
+Просьба подтвердить по кнопке ниже.</textarea>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Подпись</label>
+                    <div class="alert alert-light" style="border: none; border-top: 2px solid #0f3460; padding-top: 15px;">
+                        <div style="color: #0f3460; font-size: 12px; letter-spacing: 2px; margin-bottom: 10px;">───────────</div>
+                        <strong>С уважением,</strong><br><br>
+                        {{ current_user.full_name or current_user.email }}<br>
+                        {{ current_user.email }}<br>
+                        {% if current_user.phone %}{{ current_user.phone }}{% endif %}
+                        <div style="color: #0f3460; font-size: 12px; letter-spacing: 2px; margin-top: 10px;">───────────</div>
+                    </div>
+                </div>
+                
+                <input type="hidden" name="confirmation_link" value="{{ order.confirmation_link }}">
+            </div>
+        </div>
+        
+        <div class="mt-3">
+            <button type="submit" class="btn btn-primary">📤 Отправить</button>
+            <a href="{{ url_for('orders_supplier.index') }}" class="btn btn-secondary">Отмена</a>
+        </div>
+    </form>
+</div>
+
+<script>
+let ccCount = 1;
+
+function addCc() {
+    const container = document.getElementById('ccFields');
+    const div = document.createElement('div');
+    div.className = 'mb-3';
+    div.innerHTML = `
+        <label class="form-label">Копия</label>
+        <select class="form-select cc-select" name="cc_${ccCount}">
+            <option value="">Выберите...</option>
+            {% for emp in employees %}
+            <option value="{{ emp.email }}">{{ emp.full_name or emp.email }}</option>
+            {% endfor %}
+        </select>
+    `;
+    container.appendChild(div);
+    ccCount++;
+}
+
+// Автозаполнение темы
+document.getElementById('orgSelect').addEventListener('change', function() {
+    const org = this.options[this.selectedIndex].text;
+    document.getElementById('subjectField').value = 'Заказ {{ order.order_number }} от ' + org;
+});
+</script>
+{% endblock %}

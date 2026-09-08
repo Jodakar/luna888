@@ -14,6 +14,11 @@
                         <input type="text" class="form-control" name="full_name" value="{{ user.full_name or '' }}">
                     </div>
                     <div class="col-md-6 mb-3">
+                        <label class="form-label">Email *</label>
+                        <input type="email" class="form-control" name="email" value="{{ user.email }}" required readonly>
+                        <div class="field-hint small">Email используется для входа и сброса пароля</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
                         <label class="form-label">Телефон</label>
                         <input type="text" class="form-control" name="phone" value="{{ user.phone or '' }}" placeholder="+7XXXXXXXXXX">
                         <div class="field-hint">Формат: +7XXXXXXXXXX</div>
